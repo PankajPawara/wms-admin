@@ -43,7 +43,7 @@ const EmployeesPage = () => {
     createMutation.mutate(formData);
   };
 
-  const users = response?.data || [];
+  const users = response?.data?.items || [];
   const filtered = users.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())

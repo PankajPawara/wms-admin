@@ -13,7 +13,7 @@ const HistoryPage = () => {
     queryFn: getOrders,
   });
 
-  const orders = response?.data || [];
+  const orders = response?.data?.items || [];
   
   // Filter for completed orders
   const historyOrders = orders.filter(order => order.status === 'completed' || order.status === 'cancelled');

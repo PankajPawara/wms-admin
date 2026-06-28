@@ -42,7 +42,7 @@ const InventoryPage = () => {
     setSearchTerm(searchInput);
   };
 
-  const items = response?.data || [];
+  const items = response?.data?.items || [];
 
   return (
     <div className="page-container page-enter">

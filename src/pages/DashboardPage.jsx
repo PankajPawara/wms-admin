@@ -20,7 +20,7 @@ const DashboardPage = () => {
 
   // Fetch Orders
   const { data: ordersRes } = useQuery({ queryKey: ['orders'], queryFn: getOrders });
-  const orders = ordersRes?.data || [];
+  const orders = ordersRes?.data?.items || [];
   
   // Calculate Order Stats
   const activeOrders = orders.filter(o => o.status !== 'completed').length;
@@ -31,7 +31,7 @@ const DashboardPage = () => {
 
   // Fetch Users
   const { data: usersRes } = useQuery({ queryKey: ['users'], queryFn: getUsers });
-  const users = usersRes?.data || [];
+  const users = usersRes?.data?.items || [];
   const activePickers = users.filter(u => u.status === 'active' && u.role === 'picker').length;
 
   // Chart Data (Mocking daily trend from orders - a simple aggregation)

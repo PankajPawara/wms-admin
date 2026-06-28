@@ -13,7 +13,7 @@ const OrdersPage = () => {
     queryFn: getOrders,
   });
 
-  const orders = response?.data || [];
+  const orders = response?.data?.items || [];
   
   // Filter for active orders
   const activeOrders = orders.filter(order => order.status !== 'completed');
