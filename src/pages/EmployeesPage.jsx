@@ -12,6 +12,8 @@ const EmployeesPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [discardAction, setDiscardAction] = useState(null); // 'add' or 'edit'
   
   const [sortConfig, setSortConfig] = useState({ key: 'employee_id', direction: 'ascending' });
   
@@ -24,6 +26,9 @@ const EmployeesPage = () => {
   const [editFormData, setEditFormData] = useState({
     id: '', name: '', employee_id: '', role: 'picker', mobile: '', email: '', address: '', status: 'active'
   });
+  
+  // Track original edit data to check if changed (dirty check)
+  const [originalEditData, setOriginalEditData] = useState(null);
 
   // Delete target state
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -97,8 +102,59 @@ const EmployeesPage = () => {
     }
   };
 
+  // Check if add form has any text
+  const isAddFormDirty = () => {
+    return addFormData.name !== '' ||
+           addFormData.employee_id !== '' ||
+           addFormData.temporary_password !== '' ||
+           addFormData.mobile !== '' ||
+           addFormData.email !== '' ||
+           addFormData.address !== '';
+  };
+
+  // Check if edit form has changed from original values
+  const isEditFormDirty = () => {
+    if (!originalEditData) return false;
+    return editFormData.name !== originalEditData.name ||
+           editFormData.employee_id !== originalEditData.employee_id ||
+           editFormData.mobile !== originalEditData.mobile ||
+           editFormData.email !== originalEditData.email ||
+           editFormData.address !== originalEditData.address ||
+           editFormData.role !== originalEditData.role ||
+           editFormData.status !== originalEditData.status;
+  };
+
+  const attemptCloseAdd = () => {
+    if (isAddFormDirty()) {
+      setDiscardAction('add');
+      setShowDiscardConfirm(true);
+    } else {
+      setShowAddModal(false);
+    }
+  };
+
+  const attemptCloseEdit = () => {
+    if (isEditFormDirty()) {
+      setDiscardAction('edit');
+      setShowDiscardConfirm(true);
+    } else {
+      setShowEditModal(false);
+    }
+  };
+
+  const handleConfirmDiscard = () => {
+    if (discardAction === 'add') {
+      setShowAddModal(false);
+      setAddFormData({ name: '', employee_id: '', temporary_password: '', role: 'picker', mobile: '', email: '', address: '' });
+    } else if (discardAction === 'edit') {
+      setShowEditModal(false);
+    }
+    setShowDiscardConfirm(false);
+    setDiscardAction(null);
+  };
+
   const openEditModal = (emp) => {
-    setEditFormData({
+    const data = {
       id: emp._id,
       name: emp.name || '',
       employee_id: emp.employee_id || '',
@@ -107,7 +163,9 @@ const EmployeesPage = () => {
       email: emp.email || '',
       address: emp.address || '',
       status: emp.status || 'active'
-    });
+    };
+    setEditFormData(data);
+    setOriginalEditData(data);
     setShowEditModal(true);
   };
 
@@ -312,14 +370,17 @@ const EmployeesPage = () => {
 
       {/* Add Employee Modal */}
       {showAddModal && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) attemptCloseAdd(); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          }}
+        >
           <div className="card page-enter" style={{ width: '450px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>Add New Employee</h2>
-              <button className="icon-btn" onClick={() => setShowAddModal(false)}><X size={20}/></button>
+              <button className="icon-btn" onClick={attemptCloseAdd}><X size={20}/></button>
             </div>
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
@@ -366,14 +427,17 @@ const EmployeesPage = () => {
 
       {/* Edit Employee Modal */}
       {showEditModal && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-        }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) attemptCloseEdit(); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          }}
+        >
           <div className="card page-enter" style={{ width: '450px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>Edit Employee Profile</h2>
-              <button className="icon-btn" onClick={() => setShowEditModal(false)}><X size={20}/></button>
+              <button className="icon-btn" onClick={attemptCloseEdit}><X size={20}/></button>
             </div>
             <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
@@ -423,10 +487,13 @@ const EmployeesPage = () => {
 
       {/* Delete Confirmation Dialog Modal */}
       {showDeleteModal && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001
-        }}>
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001
+          }}
+        >
           <div className="card page-enter" style={{ width: '400px', padding: '2rem', textAlign: 'center' }}>
             <div style={{ color: 'var(--color-danger)', marginBottom: '1rem' }}>
               <Trash2 size={48} style={{ margin: '0 auto' }} />
@@ -441,6 +508,30 @@ const EmployeesPage = () => {
               </button>
               <button className="btn btn-danger" onClick={handleDeleteSubmit} style={{ flex: 1 }} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Discard Changes Warning Modal Overlay */}
+      {showDiscardConfirm && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100
+        }}>
+          <div className="card page-enter" style={{ width: '380px', padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Discard Changes?</h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+              You have unsaved changes. Are you sure you want to close? Your modifications will be lost.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setShowDiscardConfirm(false)} style={{ flex: 1 }}>
+                Keep Editing
+              </button>
+              <button className="btn btn-danger" onClick={handleConfirmDiscard} style={{ flex: 1 }}>
+                Discard
               </button>
             </div>
           </div>
