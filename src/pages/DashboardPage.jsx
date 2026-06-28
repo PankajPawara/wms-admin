@@ -53,7 +53,12 @@ const DashboardPage = () => {
       <div className="dashboard-header">
         <h1>Dashboard Overview</h1>
         <div className="date-picker-placeholder">
-          <button className="btn btn-secondary">This Week</button>
+          <select className="input-field" style={{ padding: '0.5rem 1rem', cursor: 'pointer' }} defaultValue="week">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+          </select>
         </div>
       </div>
 
