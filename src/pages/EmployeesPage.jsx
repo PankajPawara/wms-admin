@@ -9,7 +9,7 @@ const EmployeesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '', employee_id: '', password: '', role: 'picker', mobile: '', email: ''
+    name: '', employee_id: '', temporary_password: '', role: 'employee', mobile: '', email: '', address: ''
   });
 
   const queryClient = useQueryClient();
@@ -24,11 +24,12 @@ const EmployeesPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       setShowModal(false);
-      setFormData({ name: '', employee_id: '', password: '', role: 'picker', mobile: '', email: '' });
+      setFormData({ name: '', employee_id: '', temporary_password: '', role: 'employee', mobile: '', email: '', address: '' });
       alert('Employee created successfully');
     },
     onError: (err) => {
-      alert(`Error creating employee: ${err.message || 'Unknown error'}`);
+      const errMsg = err.response?.data?.message || err.message || 'Unknown error';
+      alert(`Error creating employee: ${errMsg}`);
     }
   });
 
@@ -139,7 +140,7 @@ const EmployeesPage = () => {
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
-          <div className="card page-enter" style={{ width: '400px', padding: '2rem' }}>
+          <div className="card page-enter" style={{ width: '450px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2>Add New Employee</h2>
               <button className="icon-btn" onClick={() => setShowModal(false)}><X size={20}/></button>
@@ -154,14 +155,25 @@ const EmployeesPage = () => {
                 <input required className="input-field" value={formData.employee_id} onChange={e => setFormData({...formData, employee_id: e.target.value})} />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Initial Password</label>
-                <input required type="password" className="input-field" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Mobile (10 digits)</label>
+                <input required type="tel" pattern="[0-9]{10}" placeholder="e.g. 9876543210" className="input-field" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Email</label>
+                <input required type="email" placeholder="e.g. employee@wms.com" className="input-field" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Address (Optional)</label>
+                <input className="input-field" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Initial Password (min 8 chars)</label>
+                <input required type="password" minLength={8} className="input-field" value={formData.temporary_password} onChange={e => setFormData({...formData, temporary_password: e.target.value})} />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Role</label>
                 <select className="input-field" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                  <option value="picker">Picker</option>
-                  <option value="checker">Checker</option>
+                  <option value="employee">Employee (Picker/Checker)</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
