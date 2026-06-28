@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Package, Lock, User, ShieldCheck } from 'lucide-react';
+import { Package, Lock, User, ShieldCheck, X, KeyRound } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/pages.css';
 
@@ -8,6 +9,7 @@ const LoginPage = () => {
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
@@ -84,7 +86,14 @@ const LoginPage = () => {
               <label className="checkbox-label">
                 <input type="checkbox" /> Remember Me
               </label>
-              <a href="#" className="forgot-link">Forgot Password?</a>
+              <button 
+                type="button" 
+                className="forgot-link" 
+                onClick={() => setShowForgotModal(true)}
+                style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-primary)', cursor: 'pointer', background: 'none', border: 'none' }}
+              >
+                Forgot Password?
+              </button>
             </div>
 
             <button type="submit" className="btn btn-primary login-btn" disabled={isLoading}>
@@ -98,6 +107,34 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+
+      {showForgotModal && createPortal(
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setShowForgotModal(false); }}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001
+          }}
+        >
+          <div className="card page-enter" style={{ width: '400px', padding: '2.5rem', textAlign: 'center', position: 'relative' }}>
+            <button className="icon-btn" onClick={() => setShowForgotModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem' }}><X size={20}/></button>
+            <div style={{ color: 'var(--color-primary)', marginBottom: '1.25rem' }}>
+              <KeyRound size={48} style={{ margin: '0 auto' }} />
+            </div>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', color: 'var(--color-text-primary)' }}>Forgot Password?</h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+              For security reasons, database password resets are managed directly by WMS IT Support. Please contact your system administrator or the IT Help Desk to recover your account:
+            </p>
+            <div style={{ backgroundColor: 'var(--color-bg)', padding: '1rem', borderRadius: 'var(--radius-md)', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: '1.5rem' }}>
+              support@wms.com
+            </div>
+            <button className="btn btn-primary" onClick={() => setShowForgotModal(false)} style={{ width: '100%' }}>
+              Okay, I understand
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
