@@ -90,7 +90,7 @@ const LoginPage = () => {
 
   return (
     <div className="login-container theme-enhanced-login">
-      {/* Background Graphic beautification layer */}
+      {/* Fullscreen Video Background */}
       <div className="login-visual-container">
         <video 
           ref={videoRef}
@@ -99,7 +99,7 @@ const LoginPage = () => {
           autoPlay
           muted
           playsInline
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          loop
         />
         
         {/* Magic Particles / Sparkles overlay triggered during glowing stage */}
@@ -122,9 +122,14 @@ const LoginPage = () => {
         </div>
       </div>
       
-      {/* Login Card overlay containing the form, transitions smoothly at stage 4 */}
-      <div className={`login-card-wrapper anim-stage-${animationStage}`}>
-        <div className="card login-card box-popup-card">
+      {/* Login Card overlay containing the form, positioned in the center, appearing at stage 4 */}
+      <div className={`login-card-overlay-wrapper anim-stage-${animationStage}`}>
+        <div className="card login-card glass-3d-card">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+            <div className="glass-icon-wrapper">
+              <Package size={32} className="logo-icon" style={{ color: 'var(--color-primary)' }} />
+            </div>
+          </div>
           <h2>Login to your account</h2>
           
           {error && <div className="error-message">{error}</div>}
@@ -136,7 +141,7 @@ const LoginPage = () => {
                 <User size={18} className="input-icon" />
                 <input
                   type="text"
-                  className="input-field"
+                  className="input-field glass-input"
                   placeholder="Enter your ID"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
@@ -151,7 +156,7 @@ const LoginPage = () => {
                 <Lock size={18} className="input-icon" />
                 <input
                   type="password"
-                  className="input-field"
+                  className="input-field glass-input"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -167,7 +172,7 @@ const LoginPage = () => {
               <a href="#" className="forgot-link">Forgot Password?</a>
             </div>
 
-            <button type="submit" className="btn btn-primary login-btn" disabled={isLoading}>
+            <button type="submit" className="btn btn-primary login-btn glass-btn" disabled={isLoading}>
               {isLoading ? 'Authenticating...' : 'LOGIN'}
             </button>
           </form>
