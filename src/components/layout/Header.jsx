@@ -89,12 +89,30 @@ const Header = () => {
 
       {showProfile && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="card page-enter" style={{ width: '400px', padding: '2rem', position: 'relative' }}>
+          <div className="card page-enter" style={{ width: '400px', padding: '2rem', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0 }}>My Profile</h2>
               <button className="icon-btn" onClick={() => setShowProfile(false)}><X size={20}/></button>
             </div>
-            <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                // Update basic info
+                await updateMutation.mutateAsync(formData);
+                // Update password if provided
+                if (formData.newPassword) {
+                  const { default: api } = await import('../../api/axios');
+                  await api.post('/auth/change-password', {
+                    current_password: formData.currentPassword,
+                    new_password: formData.newPassword,
+                    confirm_password: formData.newPassword
+                  });
+                  alert('Password changed successfully');
+                }
+              } catch (err) {
+                alert(`Error changing password: ${err.message || 'Unknown error'}`);
+              }
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Name</label>
                 <input required className="input-field" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
@@ -107,6 +125,19 @@ const Header = () => {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Email</label>
                 <input type="email" className="input-field" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
               </div>
+              
+              <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '0.5rem 0' }} />
+              <h3 style={{ margin: 0, fontSize: '1rem' }}>Change Password</h3>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Current Password</label>
+                <input type="password" className="input-field" value={formData.currentPassword || ''} onChange={e => setFormData({...formData, currentPassword: e.target.value})} placeholder="Leave blank to keep current" />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>New Password</label>
+                <input type="password" className="input-field" value={formData.newPassword || ''} onChange={e => setFormData({...formData, newPassword: e.target.value})} placeholder="Leave blank to keep current" />
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={updateMutation.isPending}>
                   {updateMutation.isPending ? 'Saving...' : 'Save Changes'}

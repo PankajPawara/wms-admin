@@ -8,11 +8,10 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import InventoryPage from './pages/InventoryPage';
 
-// Simple placeholders for now
-const EmployeesPage = () => <div className="card"><h1>Employees</h1></div>;
-const OrdersPage = () => <div className="card"><h1>Orders</h1></div>;
-const HistoryPage = () => <div className="card"><h1>History</h1></div>;
-const SettingsPage = () => <div className="card"><h1>Settings</h1></div>;
+import EmployeesPage from './pages/EmployeesPage';
+import OrdersPage from './pages/OrdersPage';
+import HistoryPage from './pages/HistoryPage';
+import SettingsPage from './pages/SettingsPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
