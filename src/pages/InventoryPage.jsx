@@ -1,12 +1,16 @@
 import React, { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Upload, Download, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Search, Upload, Download, Edit2, Trash2, Loader2, X } from 'lucide-react';
 import { getInventory, importInventory } from '../api/inventory.api';
+import { useToast } from '../hooks/useToast';
 import '../styles/pages.css';
 
 const InventoryPage = () => {
+  const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [pendingFile, setPendingFile] = useState(null);
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -20,20 +24,26 @@ const InventoryPage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
       queryClient.invalidateQueries({ queryKey: ['inventoryVersion'] });
-      alert('Inventory imported successfully!');
+      setPendingFile(null);
+      toast.success('Inventory imported successfully!');
     },
     onError: (err) => {
-      alert(`Import failed: ${err.message || 'Unknown error'}`);
+      const errMsg = err.response?.data?.message || err.message || 'Unknown error';
+      toast.error(`Import failed: ${errMsg}`);
     }
   });
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (confirm(`Are you sure you want to import ${file.name}? This will update the inventory version.`)) {
-        importMutation.mutate(file);
-      }
+      setPendingFile(file);
       e.target.value = null; // reset
+    }
+  };
+
+  const confirmImport = () => {
+    if (pendingFile) {
+      importMutation.mutate(pendingFile);
     }
   };
 
@@ -50,8 +60,8 @@ const InventoryPage = () => {
         <h1>Inventory Management</h1>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {importMutation.isPending && <span style={{color: 'var(--color-primary)'}}>Importing...</span>}
-          <button className="btn btn-secondary" onClick={() => alert('Export not implemented yet')}>
-            <Download size={18} />
+          <button className="btn btn-secondary" onClick={() => toast.info('Export not implemented yet')}>
+            <Upload size={18} />
             Export
           </button>
           
@@ -67,7 +77,7 @@ const InventoryPage = () => {
             onClick={() => fileInputRef.current?.click()}
             disabled={importMutation.isPending}
           >
-            <Upload size={18} />
+            <Download size={18} />
             Import Excel File
           </button>
         </div>
@@ -153,6 +163,33 @@ const InventoryPage = () => {
           )}
         </div>
       </div>
+
+      {/* File Import Confirmation Dialog */}
+      {pendingFile && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1001
+        }}>
+          <div className="card page-enter" style={{ width: '400px', padding: '2rem', textAlign: 'center' }}>
+            <div style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>
+              <Upload size={48} style={{ margin: '0 auto' }} />
+            </div>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Import Inventory File</h2>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+              Are you sure you want to import <strong>{pendingFile.name}</strong>? This will update the inventory database and increment the global WMS version.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button className="btn btn-secondary" onClick={() => setPendingFile(null)} style={{ flex: 1 }}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={confirmImport} style={{ flex: 1 }} disabled={importMutation.isPending}>
+                {importMutation.isPending ? 'Importing...' : 'Confirm Import'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

@@ -4,10 +4,12 @@ import { useAuth } from '../hooks/useAuth';
 import { ThemeContext } from '../context/ThemeContext';
 import { updateUser } from '../api/users.api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../hooks/useToast';
 
 const SettingsPage = () => {
   const { user, setUser } = useAuth();
   const { theme, changeTheme } = useContext(ThemeContext);
+  const toast = useToast();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({ 
@@ -23,10 +25,11 @@ const SettingsPage = () => {
     onSuccess: (res) => {
       if (res.data?.user) setUser(res.data.user);
       queryClient.invalidateQueries({ queryKey: ['users'] });
-      alert('Profile updated successfully');
+      toast.success('Profile updated successfully');
     },
     onError: (err) => {
-      alert(`Error updating profile: ${err.message}`);
+      const errMsg = err.response?.data?.message || err.message || 'Unknown error';
+      toast.error(`Error updating profile: ${errMsg}`);
     }
   });
 
@@ -41,11 +44,11 @@ const SettingsPage = () => {
           new_password: formData.newPassword,
           confirm_password: formData.newPassword
         });
-        alert('Password changed successfully');
+        toast.success('Password changed successfully');
         setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '' }));
       }
     } catch (err) {
-      alert(`Error: ${err.message || 'Unknown error'}`);
+      toast.error(`Error: ${err.message || 'Unknown error'}`);
     }
   };
 
