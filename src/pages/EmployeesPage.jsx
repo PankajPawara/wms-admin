@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, Edit2, Trash2, Loader2, X } from 'lucide-react';
 import { getUsers, createUser, updateUserStatus } from '../api/users.api';
@@ -133,7 +134,7 @@ const EmployeesPage = () => {
         </div>
       </div>
 
-      {showModal && (
+      {showModal && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
@@ -169,7 +170,8 @@ const EmployeesPage = () => {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
