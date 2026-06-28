@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, Edit2, Trash2, Loader2, X } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Loader2, X, Users, Shield, User, UserCheck } from 'lucide-react';
 import { getUsers, createUser, updateUserStatus } from '../api/users.api';
 import '../styles/pages.css';
 
 const EmployeesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'employee_id', direction: 'ascending' });
   const [formData, setFormData] = useState({
-    name: '', employee_id: '', temporary_password: '', role: 'employee', mobile: '', email: '', address: ''
+    name: '', employee_id: '', temporary_password: '', role: 'picker', mobile: '', email: '', address: ''
   });
 
   const queryClient = useQueryClient();
@@ -46,10 +47,46 @@ const EmployeesPage = () => {
   };
 
   const users = response?.data?.items || [];
+  
+  // Calculate summary stats
+  const totalUsers = users.length;
+  const adminCount = users.filter(u => u.role === 'admin').length;
+  const pickerCount = users.filter(u => u.role === 'picker').length;
+  const checkerCount = users.filter(u => u.role === 'checker').length;
+
   const filtered = users.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.employee_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (!a[sortConfig.key]) return 1;
+    if (!b[sortConfig.key]) return -1;
+    
+    let aVal = a[sortConfig.key].toString().toLowerCase();
+    let bVal = b[sortConfig.key].toString().toLowerCase();
+    
+    if (aVal < bVal) {
+      return sortConfig.direction === 'ascending' ? -1 : 1;
+    }
+    if (aVal > bVal) {
+      return sortConfig.direction === 'ascending' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return ' ⇅';
+    return sortConfig.direction === 'ascending' ? ' ▴' : ' ▾';
+  };
 
   return (
     <div className="page-container page-enter">
@@ -59,6 +96,49 @@ const EmployeesPage = () => {
           <Plus size={18} />
           Add Employee
         </button>
+      </div>
+
+      {/* Summary Stats Grid */}
+      <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+        <div className="card stat-card">
+          <div className="stat-icon-wrapper purple">
+            <Users size={24} />
+          </div>
+          <div className="stat-content">
+            <h3>Total Users</h3>
+            <div className="stat-value">{totalUsers}</div>
+          </div>
+        </div>
+
+        <div className="card stat-card">
+          <div className="stat-icon-wrapper blue">
+            <Shield size={24} />
+          </div>
+          <div className="stat-content">
+            <h3>Admins</h3>
+            <div className="stat-value">{adminCount}</div>
+          </div>
+        </div>
+
+        <div className="card stat-card">
+          <div className="stat-icon-wrapper green">
+            <User size={24} />
+          </div>
+          <div className="stat-content">
+            <h3>Pickers</h3>
+            <div className="stat-value">{pickerCount}</div>
+          </div>
+        </div>
+
+        <div className="card stat-card">
+          <div className="stat-icon-wrapper orange">
+            <UserCheck size={24} />
+          </div>
+          <div className="stat-content">
+            <h3>Checkers</h3>
+            <div className="stat-value">{checkerCount}</div>
+          </div>
+        </div>
       </div>
 
       <div className="card">
@@ -92,15 +172,23 @@ const EmployeesPage = () => {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Employee ID</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Status</th>
+                  <th onClick={() => requestSort('employee_id')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Employee ID{getSortIcon('employee_id')}
+                  </th>
+                  <th onClick={() => requestSort('name')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Name{getSortIcon('name')}
+                  </th>
+                  <th onClick={() => requestSort('role')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Role{getSortIcon('role')}
+                  </th>
+                  <th onClick={() => requestSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Status{getSortIcon('status')}
+                  </th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((emp) => (
+                {sorted.map((emp) => (
                   <tr key={emp._id}>
                     <td style={{ fontWeight: 500 }}>{emp.employee_id}</td>
                     <td>{emp.name}</td>
@@ -173,8 +261,10 @@ const EmployeesPage = () => {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Role</label>
                 <select className="input-field" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                  <option value="employee">Employee (Picker/Checker)</option>
+                  <option value="picker">Picker</option>
+                  <option value="checker">Checker</option>
                   <option value="admin">Admin</option>
+                  <option value="employee">Employee (Generic)</option>
                 </select>
               </div>
               <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }} disabled={createMutation.isPending}>
