@@ -50,12 +50,12 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="page-container page-enter">
+    <div className="page-container page-enter" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
       <div className="dashboard-header">
         <h1>Settings</h1>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', maxWidth: '800px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
         
         {/* Admin Profile Section */}
         <div className="card">
