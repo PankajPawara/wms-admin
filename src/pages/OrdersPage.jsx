@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
-import { Search, Eye, Filter } from 'lucide-react';
-
-const dummyOrders = [
-  { id: 1, memo: 'MEMO-2026-0089', customer: 'Apex Motors', items: 12, status: 'picking', date: '2026-06-25 14:30' },
-  { id: 2, memo: 'MEMO-2026-0090', customer: 'Global Spares', items: 5, status: 'pending_checking', date: '2026-06-25 15:10' },
-  { id: 3, memo: 'MEMO-2026-0091', customer: 'City Garage', items: 28, status: 'draft', date: '2026-06-25 16:05' },
-];
+import { useQuery } from '@tanstack/react-query';
+import { Search, Eye, Filter, Loader2 } from 'lucide-react';
+import { getOrders } from '../api/orders.api';
+import { formatDate } from '../utils/format';
+import '../styles/pages.css';
 
 const OrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  });
+
+  const orders = response?.data || [];
+  
+  // Filter for active orders
+  const activeOrders = orders.filter(order => order.status !== 'completed');
+
+  // Apply search filter
+  const filtered = activeOrders.filter(order => 
+    order.memo_number?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="page-container">
+    <div className="page-container page-enter">
       <div className="dashboard-header">
         <h1>Active Orders</h1>
         <button className="btn btn-secondary">
@@ -32,41 +46,60 @@ const OrdersPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+            Showing {filtered.length} active orders
+          </span>
         </div>
 
         <div className="table-container">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Memo No</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Status</th>
-                <th>Created At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dummyOrders.map((order) => (
-                <tr key={order.id}>
-                  <td style={{ fontWeight: 500 }}>{order.memo}</td>
-                  <td>{order.customer}</td>
-                  <td>{order.items}</td>
-                  <td>
-                    {order.status === 'picking' && <span className="badge badge-warning">Picking</span>}
-                    {order.status === 'pending_checking' && <span className="badge badge-info">Pending Checking</span>}
-                    {order.status === 'draft' && <span className="badge" style={{backgroundColor: 'var(--color-border)', color: 'var(--color-text-primary)'}}>Draft</span>}
-                  </td>
-                  <td style={{ color: 'var(--color-text-secondary)' }}>{order.date}</td>
-                  <td>
-                    <button className="icon-btn" style={{ width: '32px', height: '32px' }}>
-                      <Eye size={16} />
-                    </button>
-                  </td>
+          {isLoading ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+              <Loader2 size={24} className="spin" style={{ margin: '0 auto', display: 'block', marginBottom: '1rem' }} />
+              Loading orders...
+            </div>
+          ) : isError ? (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-danger)' }}>
+              Failed to load orders.
+            </div>
+          ) : (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Memo No</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((order) => (
+                  <tr key={order._id}>
+                    <td style={{ fontWeight: 500 }}>{order.memo_number}</td>
+                    <td>{order.customer_name || 'N/A'}</td>
+                    <td>{order.items?.length || 0}</td>
+                    <td>
+                      {order.status === 'picking' && <span className="badge badge-warning">Picking</span>}
+                      {order.status === 'pending_checking' && <span className="badge badge-info">Pending Checking</span>}
+                      {order.status === 'draft' && <span className="badge" style={{backgroundColor: 'var(--color-border)', color: 'var(--color-text-primary)'}}>Draft</span>}
+                    </td>
+                    <td style={{ color: 'var(--color-text-secondary)' }}>{formatDate(order.createdAt)}</td>
+                    <td>
+                      <button className="icon-btn" style={{ width: '32px', height: '32px' }} title="View Details">
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {!isLoading && filtered.length === 0 && (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+              No active orders found {searchTerm ? `matching "${searchTerm}"` : ''}
+            </div>
+          )}
         </div>
       </div>
     </div>
