@@ -19,3 +19,11 @@ export const importInventory = async (file) => {
     },
   });
 };
+
+export const updateInventoryItem = async ({ id, data }) => {
+  return await api.patch(`/inventory/${id}`, data);
+};
+
+export const deleteInventoryItem = async (id) => {
+  return await api.delete(`/inventory/${id}`);
+};
